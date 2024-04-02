@@ -1,0 +1,22 @@
+# fluid-drop-detection
+
+- Install requirements.txt using pip install -r requirements.txt
+
+
+Program ini adalah aplikasi FastAPI yang melakukan deteksi objek menggunakan model YOLOv5 (You Only Look Once). Program ini memiliki beberapa fitur utama:
+
+Inisialisasi Model: Program ini menggunakan model YOLOv5 yang telah dilatih sebelumnya. Model ini dimuat menggunakan PyTorch dari paket Ultralytics/yolov5.
+
+Fungsi Deteksi Drops: Fungsi detect_drops() mengambil frame gambar dan menggunakan model YOLOv5 untuk mendeteksi objek (drops) dalam frame tersebut.
+
+Perhitungan Jumlah Total Drops: Fungsi count_total_drops() menggunakan fungsi detect_drops() untuk mendapatkan jumlah total drops dalam suatu frame gambar.
+
+Perhitungan Durasi Antara Drops: Fungsi duration_between_drops() menghitung durasi antara dua drops berurutan dalam frame gambar. Durasi ini dihitung dengan menggunakan waktu terakhir drop terdeteksi dan waktu deteksi drop terbaru.
+
+Fungsi Pengolahan Frame: Fungsi process_frame() adalah inti dari program. Fungsi ini menghitung total drops dalam suatu frame dan juga menghitung durasi antara drops.
+
+Endpoint untuk Memulai Deteksi Objek: Endpoint /start_detection digunakan untuk memulai proses deteksi objek. Ini akan memulai streaming video dari kamera default dan menjalankan fungsi detect_objects() di latar belakang.
+
+Endpoint untuk Menghentikan Deteksi Objek: Endpoint /stop_detection digunakan untuk menghentikan proses deteksi objek. Namun, implementasi untuk menghentikan deteksi objek belum diimplementasikan.
+
+Endpoint untuk Mendapatkan Statistik Drops: Endpoint /drop_stats digunakan untuk mendapatkan statistik tentang jumlah total drops yang terdeteksi dan rata-rata waktu antara drops.

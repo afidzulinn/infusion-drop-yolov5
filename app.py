@@ -20,6 +20,7 @@ video_capture = None
 last_drop_time = 0
 total_drops = 0
 total_duration = 0
+tai = 'bau'
 
 def detect_drops(frame):
     # Perform object detection on the frame

@@ -11,11 +11,12 @@ pathlib.PosixPath = pathlib.WindowsPath
 app = FastAPI()
 
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu' 
-pathlib = os.path.join('D:\infusion/yolov5/runs/train/exp2/weights/best.pt')
+device = '0' if torch.cuda.is_available() else 'cpu'
+pathlib = Path('D:\infusion/yolov5/runs/train/exp2/weights/best.pt')
 # path = 'D:/infusion/yolov5/runs/train/exp2/weights/best.pt'
-model = torch.hub.load('Ultralytics/yolov5', 'custom', path=pathlib, device='0', force_reload=True)
+model = torch.hub.load('Ultralytics/yolov5', 'custom', path=pathlib, device=device, force_reload=True)
 
+video_capture = None
 last_drop_time = 0
 total_drops = 0
 total_duration = 0
@@ -50,23 +51,26 @@ def process_frame(frame):
     duration, last_drop_time = duration_between_drops(frame, last_drop_time)
     if duration is not None:
         total_duration += duration
-        average_duration = total_duration / total_drops
-        print("Total drops:", total_drops)
-        print("Average duration between drops:", average_duration)
+        # average_duration = total_duration / total_drops
+        # print("Total drops:", total_drops)
+        # print("Average duration between drops:", average_duration)
 
 @app.post("/start_detection")
 async def start_detection(background_tasks: BackgroundTasks):
+
+    global video_capture, total_drops, last_drop_time, total_duration
+
+    video_capture = cv2.VideoCapture(0)
+    if not video_capture.isOpened():
+        print("Error: Unable to access the camera.")
+        return {"message": "Error: Unable to access the camera."}
+
+    total_drops = 0
+    last_drop_time = 0
+    total_duration = 0
+
     def detect_objects():
-        video_capture = cv2.VideoCapture(0)  # Open default camera (change to your camera index if needed)
-        if not video_capture.isOpened():
-            print("Error: Unable to access the camera.")
-            return
-
-        global total_drops, last_drop_time, total_duration
-        total_drops = 0
-        last_drop_time = 0
-        total_duration = 0
-
+        global video_capture
         while True:
             ret, frame = video_capture.read()
             if not ret:
@@ -76,31 +80,67 @@ async def start_detection(background_tasks: BackgroundTasks):
             process_frame(frame)
             time.sleep(0.1)
 
-        video_capture.release()
         cv2.destroyAllWindows()
 
     background_tasks.add_task(detect_objects)
 
     return {"message": "Object detection started."}
+    # def detect_objects():
+    #     video_capture = cv2.VideoCapture(0)
+    #     if not video_capture.isOpened():
+    #         print("Error: Unable to access the camera.")
+    #         return
+    #
+    #     global total_drops, last_drop_time, total_duration
+    #     total_drops = 0
+    #     last_drop_time = 0
+    #     total_duration = 0
+    #
+    #     while True:
+    #         ret, frame = video_capture.read()
+    #         if not ret:
+    #             print("Error: Unable to capture frame.")
+    #             break
+    #
+    #         process_frame(frame)
+    #         time.sleep(0.1)
+    #
+    #     video_capture.release()
+    #     cv2.destroyAllWindows()
+    #
+    # background_tasks.add_task(detect_objects)
+    #
+    # return {"message": "Object detection started."}
 
 @app.post("/stop_detection")
 async def stop_detection():
-  # Get handle to video camera
-  camera = cv2.VideoCapture(0)
-  # Stop camera
-  camera.release()
+    global video_capture
 
-  # global model
-  global total_drops, last_drop_time, total_duration
-  total_drops = 0
-  last_drop_time = 0
-  total_duration = 0
+    if video_capture is not None:
+        video_capture.release()
+        video_capture = None
 
-  return {"message": "Object detection and Camera stopped."}
+
+  # # Get handle to video camera
+  # camera = cv2.VideoCapture(0)
+  # # Stop camera
+  # camera.release()
+
+    # global model
+    global total_drops, last_drop_time, total_duration
+    total_drops = 0
+    last_drop_time = 0
+    total_duration = 0
+
+    return {"message": "Object detection and Camera stopped."}
 
 @app.get("/drop_stats")
 async def get_drop_stats():
-    return {"total_drops": total_drops, "long_drop_between_drops (seconds)": total_duration / total_drops if total_drops > 0 else 0}
+    global total_drops, total_duration
+
+    long_drop_between_drops = total_duration / total_drops if total_drops > 0 else 0
+    return {"total_drops": total_drops, "long_drop_between_drops (seconds)": long_drop_between_drops}
+
 
 
 if __name__ == "__main__":

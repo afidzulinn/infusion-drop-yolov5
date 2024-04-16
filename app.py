@@ -10,7 +10,6 @@ pathlib.PosixPath = pathlib.WindowsPath
 
 app = FastAPI()
 
-
 device = '0' if torch.cuda.is_available() else 'cpu'
 pathlib = Path('D:\infusion/yolov5/runs/train/exp2/weights/best.pt')
 # path = 'D:/infusion/yolov5/runs/train/exp2/weights/best.pt'
@@ -20,7 +19,6 @@ video_capture = None
 last_drop_time = 0
 total_drops = 0
 total_duration = 0
-tai = 'bau'
 
 def detect_drops(frame):
     # Perform object detection on the frame
